@@ -1,0 +1,57 @@
+# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
+
+# dependencies
+node_modules/
+
+# Expo
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+
+# Native
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# Metro
+.metro-health-check*
+
+# debug
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# macOS
+.DS_Store
+*.pem
+
+# local env files
+.env*.local
+
+# typescript
+*.tsbuildinfo
+
+# old example app files
+app-example/
+
+# coverage
+coverage/
+
+# development-only files
+_dev/
+
+# Cursor prompt
+.cursorrules
+
+# Pre-build files
+/android/
+/ios/
+
+# Amazon Chime supporting projects (useful for development and AI only)
+/amazon-chime-react-native-demo/
+/amazon-chime-sdk-android/
+/amazon-chime-sdk-ios/
