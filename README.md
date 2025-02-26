@@ -90,7 +90,6 @@ The AWS Chime SDK is integrated as a custom Expo native module using Expo Module
 ## ⛔ Known Issues
 
 - When a new tile is added (like when a new participant joins the meeting), the local video tile stops working. If you stop and start the local video, it will work again.
-- Starting and stopping the local video multiple times or when the meeting is still loading can crash the app with a `SIGSEGV` error.
 
 ## Contributing
 

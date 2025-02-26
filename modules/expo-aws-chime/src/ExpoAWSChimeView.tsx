@@ -1,5 +1,6 @@
 import { requireNativeViewManager } from "expo-modules-core";
 import * as React from "react";
+import { PureComponent } from "react";
 import { View, ViewProps } from "react-native";
 
 export type ExpoAWSChimeViewProps = {
@@ -9,11 +10,13 @@ export type ExpoAWSChimeViewProps = {
 const NativeView: React.ComponentType<ExpoAWSChimeViewProps> =
   requireNativeViewManager("ExpoAWSChime");
 
-export default function ExpoAWSChimeView(props: ExpoAWSChimeViewProps) {
-  const { tileId, ...rest } = props;
-  return (
-    <View {...rest}>
-      <NativeView style={{ width: "100%", height: "100%" }} tileId={tileId} />
-    </View>
-  );
+export default class ExpoAWSChimeView extends PureComponent<ExpoAWSChimeViewProps> {
+  render() {
+    const { tileId, ...rest } = this.props;
+    return (
+      <View {...rest}>
+        <NativeView style={{ width: "100%", height: "100%" }} tileId={tileId} />
+      </View>
+    );
+  }
 }

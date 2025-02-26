@@ -1,6 +1,6 @@
 import { useRouter } from "expo-router";
 import React, { useCallback, useMemo } from "react";
-import { useWindowDimensions, View } from "react-native";
+import { View } from "react-native";
 
 import { Button, ButtonText } from "@/components/ui/button";
 import { HStack } from "@/components/ui/hstack";
@@ -26,7 +26,6 @@ export function MeetingScreen({ meetingTitle }: MeetingScreenProps) {
     toggleVideo,
   } = useChimeMeeting();
   const router = useRouter();
-  const { width, height } = useWindowDimensions();
 
   const handleLeaveMeeting = useCallback(() => {
     leaveMeeting();

@@ -54,7 +54,7 @@ class ExpoAWSChimeModule : Module() {
 
     AsyncFunction("startMeeting") { meetingInfo: Map<String, Any>, attendeeInfo: Map<String, Any> ->
       try {
-        logger.debug(TAG, "Starting meeting with info: $meetingInfo and attendee info: $attendeeInfo")
+        logger.info(TAG, "Starting meeting with info: $meetingInfo and attendee info: $attendeeInfo")
 
         // Safely extract meeting info with null checks
         val meetingId = meetingInfo["MeetingId"]?.toString()
@@ -86,37 +86,39 @@ class ExpoAWSChimeModule : Module() {
         val joinToken = attendeeInfo["JoinToken"]?.toString()
           ?: throw Exception("JoinToken is required")
 
+        logger.info(TAG, "Creating meeting session")
         val configuration = MeetingSessionConfiguration(
           meetingId,
           MeetingSessionCredentials(attendeeId, externalUserId, joinToken),
           MeetingSessionURLs(audioFallbackUrl, audioHostUrl, turnControlUrl, signalingUrl, ::defaultUrlRewriter)
         )
-
         meetingSession = DefaultMeetingSession(configuration, logger, reactContext)
+        logger.info(TAG, "Meeting session created")
+
         meetingSession?.audioVideo?.let { audioVideo ->
           // Add audio/video observer
           audioVideo.addAudioVideoObserver(object : AudioVideoObserver {
             override fun onAudioSessionStarted(reconnecting: Boolean) {
-              logger.debug(TAG, "Audio session started with reconnecting: $reconnecting")
+              logger.info(TAG, "Audio session started with reconnecting: $reconnecting")
               if (!reconnecting) {
                 scope.launch {
                   sendEvent("onMeetingStart", mapOf(
                     "timestamp" to System.currentTimeMillis()
                   ))
-                  logger.debug(TAG, "Sent onMeetingStart event")
+                  logger.info(TAG, "Sent onMeetingStart event")
                 }
               }
             }
 
             override fun onAudioSessionStopped(sessionStatus: MeetingSessionStatus) {
-              logger.debug(TAG, "Audio session stopped with status: ${sessionStatus.statusCode}")
+              logger.info(TAG, "Audio session stopped with status: ${sessionStatus.statusCode}")
               scope.launch {
                 val statusCode = sessionStatus.statusCode?.value ?: 0
                 sendEvent("onMeetingEnd", mapOf(
                   "sessionStatus" to statusCode,
                   "timestamp" to System.currentTimeMillis()
                 ))
-                logger.debug(TAG, "Sent onMeetingEnd event")
+                logger.info(TAG, "Sent onMeetingEnd event")
               }
             }
 
@@ -146,7 +148,7 @@ class ExpoAWSChimeModule : Module() {
                   "attendeeIds" to attendeeIds,
                   "externalUserIds" to externalUserIds
                 ))
-                logger.debug(TAG, "Sent onAttendeesJoin event")
+                logger.info(TAG, "Sent onAttendeesJoin event")
               }
             }
 
@@ -158,7 +160,7 @@ class ExpoAWSChimeModule : Module() {
                   "attendeeIds" to attendeeIds,
                   "externalUserIds" to externalUserIds
                 ))
-                logger.debug(TAG, "Sent onAttendeesLeave event")
+                logger.info(TAG, "Sent onAttendeesLeave event")
               }
             }
 
@@ -170,7 +172,7 @@ class ExpoAWSChimeModule : Module() {
                   "attendeeIds" to attendeeIds,
                   "externalUserIds" to externalUserIds
                 ))
-                logger.debug(TAG, "Sent onAttendeesLeave event for dropped attendees")
+                logger.info(TAG, "Sent onAttendeesLeave event for dropped attendees")
               }
             }
 
@@ -178,7 +180,7 @@ class ExpoAWSChimeModule : Module() {
               scope.launch {
                 val attendeeIds = attendeeInfo.map { it.attendeeId }
                 sendEvent("onAttendeesMute", mapOf("attendeeIds" to attendeeIds))
-                logger.debug(TAG, "Sent onAttendeesMute event")
+                logger.info(TAG, "Sent onAttendeesMute event")
               }
             }
 
@@ -186,7 +188,7 @@ class ExpoAWSChimeModule : Module() {
               scope.launch {
                 val attendeeIds = attendeeInfo.map { it.attendeeId }
                 sendEvent("onAttendeesUnmute", mapOf("attendeeIds" to attendeeIds))
-                logger.debug(TAG, "Sent onAttendeesUnmute event")
+                logger.info(TAG, "Sent onAttendeesUnmute event")
               }
             }
           })
@@ -207,7 +209,7 @@ class ExpoAWSChimeModule : Module() {
                     "videoStreamContentWidth" to tileState.videoStreamContentWidth
                   )
                 )
-                logger.debug(TAG, "Sent onAddVideoTile event")
+                logger.info(TAG, "Sent onAddVideoTile event")
               }
             }
 
@@ -222,7 +224,7 @@ class ExpoAWSChimeModule : Module() {
                     "isScreenShare" to tileState.isContent
                   )
                 )
-                logger.debug(TAG, "Sent onRemoveVideoTile event")
+                logger.info(TAG, "Sent onRemoveVideoTile event")
               }
             }
 
@@ -232,18 +234,20 @@ class ExpoAWSChimeModule : Module() {
           })
 
           // Start audio and video
+          logger.info(TAG, "Starting audio and video")
           audioVideo.start()
           audioVideo.startRemoteVideo()
+          logger.info(TAG, "Audio and video started")
 
           // Force audio to route through speaker
+          logger.info(TAG, "Forcing audio to route through speaker")
           val audioManager = reactContext.getSystemService(Context.AUDIO_SERVICE) as AudioManager
           audioManager.mode = AudioManager.MODE_IN_COMMUNICATION
           audioManager.isSpeakerphoneOn = true
-
-          logger.debug(TAG, "Audio video started with speaker enabled")
+          logger.info(TAG, "Audio routed through speaker")
         }
 
-        logger.debug(TAG, "Meeting started successfully")
+        logger.info(TAG, "Meeting started successfully")
       } catch (e: Exception) {
         logger.error(TAG, "Error starting meeting: ${e.message}")
         scope.launch {
@@ -255,40 +259,113 @@ class ExpoAWSChimeModule : Module() {
 
     AsyncFunction("stopMeeting") {
       // Reset audio routing when stopping the meeting
+      logger.info(TAG, "Stopping meeting")
       val audioManager = reactContext.getSystemService(Context.AUDIO_SERVICE) as AudioManager
       audioManager.mode = AudioManager.MODE_NORMAL
       audioManager.isSpeakerphoneOn = false
 
-      meetingSession?.audioVideo?.stop()
+      // Code below addresses the SIGSEV error:
+      // libamazon_chime_media_client.so (offset 0x1450000) (Java_com_xodee_client_video_VideoClient_doSetSending+100
+      // that occurs when joining again a meeting right after stopping it.
+      // The issue is probably caused by DefaultVideoClientController::stopAndDestroy
+      // that conflicts with DefaultVideoClientController::startLocalVideo
+
+      // Create a deferred that will be completed when cleanup is done
+      val cleanupCompleted = kotlinx.coroutines.CompletableDeferred<Unit>()
+
+      // Add a temporary observer to wait for video session to stop
+      meetingSession?.audioVideo?.addAudioVideoObserver(object : AudioVideoObserver {
+        override fun onVideoSessionStopped(sessionStatus: MeetingSessionStatus) {
+          logger.info(TAG, "Video session stopped with status: ${sessionStatus.statusCode}")
+          meetingSession = null
+          logger.info(TAG, "Meeting stopped and cleaned up")
+          cleanupCompleted.complete(Unit)
+        }
+
+        // Implement other required methods with empty bodies
+        override fun onAudioSessionStarted(reconnecting: Boolean) {}
+        override fun onAudioSessionStopped(sessionStatus: MeetingSessionStatus) {}
+        override fun onAudioSessionCancelledReconnect() {}
+        override fun onConnectionRecovered() {}
+        override fun onConnectionBecamePoor() {}
+        override fun onVideoSessionStarted(sessionStatus: MeetingSessionStatus) {}
+        override fun onAudioSessionDropped() {}
+        override fun onAudioSessionStartedConnecting(reconnecting: Boolean) {}
+        override fun onCameraSendAvailabilityUpdated(available: Boolean) {}
+        override fun onRemoteVideoSourceAvailable(sources: List<RemoteVideoSource>) {}
+        override fun onRemoteVideoSourceUnavailable(sources: List<RemoteVideoSource>) {}
+        override fun onVideoSessionStartedConnecting() {}
+      })
+
+      try {
+        // First stop local video if it's running
+        meetingSession?.audioVideo?.stopLocalVideo()
+
+        // Then stop the meeting session which will trigger stopAndDestroy
+        meetingSession?.audioVideo?.stop()
+
+        // Wait for cleanup to complete with a timeout
+        kotlinx.coroutines.runBlocking {
+          kotlinx.coroutines.withTimeout(5000) {
+            cleanupCompleted.await()
+          }
+        }
+      } catch (e: Exception) {
+        logger.error(TAG, "Error stopping meeting: ${e.message}")
+        scope.launch {
+          sendEvent("onError", mapOf("error" to e.message))
+        }
+      }
+
+      // Clean the meeting session
       meetingSession = null
+
       return@AsyncFunction null
     }
 
     AsyncFunction("mute") {
+      logger.info(TAG, "Muting local audio")
       meetingSession?.audioVideo?.realtimeLocalMute()
+      logger.info(TAG, "Local audio muted")
       return@AsyncFunction null
     }
 
     AsyncFunction("unmute") {
+      logger.info(TAG, "Unmuting local audio")
       meetingSession?.audioVideo?.realtimeLocalUnmute()
+      logger.info(TAG, "Local audio unmuted")
       return@AsyncFunction null
     }
 
     AsyncFunction("startLocalVideo") {
+      logger.info(TAG, "Starting local video")
       meetingSession?.audioVideo?.startLocalVideo()
+      logger.info(TAG, "Local video started")
       return@AsyncFunction null
     }
 
     AsyncFunction("stopLocalVideo") {
+      logger.info(TAG, "Stopping local video")
       meetingSession?.audioVideo?.stopLocalVideo()
+      logger.info(TAG, "Local video stopped")
       return@AsyncFunction null
     }
 
     View(ExpoAWSChimeView::class) {
       Prop("tileId") { view: ExpoAWSChimeView, tileId: Int ->
-        logger.debug(TAG, "Setting tileId: $tileId")
+        logger.info(TAG, "Binding tileId: $tileId")
         meetingSession?.let { session ->
           view.setTileId(session, tileId)
+          logger.info(TAG, "tileId $tileId bound")
+        }
+      }
+
+      OnViewDestroys {
+        meetingSession?.let { session ->
+          val tileId = it.tileId
+          logger.info(TAG, "Unbinding tileId: $tileId")
+          it.unsetTileId(session)
+          logger.info(TAG, "tileId $tileId unbound")
         }
       }
     }
