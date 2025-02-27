@@ -14,6 +14,7 @@ import com.amazonaws.services.chime.sdk.meetings.utils.logger.LogLevel
 class ExpoAWSChimeView(context: Context, appContext: AppContext) : ExpoView(context, appContext) {
   var tileId: Int? = null
   private val logger = ConsoleLogger(LogLevel.INFO)
+  private var isLocalTile: Boolean = false
 
   companion object {
     private const val TAG = "ExpoAWSChimeView"
@@ -34,6 +35,14 @@ class ExpoAWSChimeView(context: Context, appContext: AppContext) : ExpoView(cont
     logger.info(TAG, "Video view created and added to ExpoAWSChimeView")
   }
 
+  fun setIsLocal(isLocal: Boolean) {
+    logger.info(TAG, "Setting isLocal to $isLocal for tile $tileId")
+    this.isLocalTile = isLocal
+    // Ensure local video is on top of other views
+    videoView.setZOrderMediaOverlay(isLocal)
+    logger.info(TAG, "Set isLocal to $isLocal for tile $tileId")
+  }
+
   fun setTileId(meetingSession: MeetingSession, tileId: Int) {
     logger.info(TAG, "Binding video view to tile $tileId")
     this.tileId = tileId
@@ -47,6 +56,7 @@ class ExpoAWSChimeView(context: Context, appContext: AppContext) : ExpoView(cont
       logger.info(TAG, "Unbinding video view from tile $currentTileId")
       meetingSession.audioVideo.unbindVideoView(currentTileId)
       this.tileId = null
+      this.isLocalTile = false
       logger.info(TAG, "Successfully unbound video view from tile $currentTileId")
     }
   }

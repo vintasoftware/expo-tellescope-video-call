@@ -1,6 +1,6 @@
 # Expo AWS Chime Demo (Alpha)
 
-⚠️ **Under heavy development. Check [Known Issues](#known-issues) before using.**
+⚠️ **Under heavy development**
 
 A demonstration of AWS Chime SDK integration with Expo/React Native as a native module. This project showcases how to build a video conferencing application using [Expo Modules API](https://docs.expo.dev/versions/latest/sdk/modules/) and [AWS Chime](https://aws.amazon.com/chime/).
 
@@ -86,10 +86,6 @@ The AWS Chime SDK is integrated as a custom Expo native module using Expo Module
 - React hooks for easy integration (`useChimeMeeting`)
 - Context provider for state management (`ChimeMeetingProvider`)
 - Native view component for rendering video tiles (`ExpoAWSChimeView`)
-
-## ⛔ Known Issues
-
-- When a new tile is added (like when a new participant joins the meeting), the local video tile stops working. If you stop and start the local video, it will work again.
 
 ## Contributing
 

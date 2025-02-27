@@ -115,7 +115,11 @@ export function MeetingScreen({ meetingTitle }: MeetingScreenProps) {
                 >
                   {tilesInRow.map((tile, tileIndex) => (
                     <View key={tile.tileId} className="mx-1 flex-1 overflow-hidden rounded-lg">
-                      <ExpoAWSChimeView tileId={tile.tileId} className="h-full w-full" />
+                      <ExpoAWSChimeView
+                        tileId={tile.tileId}
+                        isLocal={false}
+                        className="h-full w-full"
+                      />
                       <Text
                         size="sm"
                         className="absolute bottom-2 left-2 rounded bg-black/50 px-1 py-0.5 text-typography-white"
@@ -137,7 +141,11 @@ export function MeetingScreen({ meetingTitle }: MeetingScreenProps) {
         {/* Local video overlay */}
         {localVideoTile && (
           <View className="absolute bottom-4 right-4 h-1/5 max-h-[240px] min-h-[160px] w-1/4 min-w-[120px] max-w-[180px] overflow-hidden">
-            <ExpoAWSChimeView tileId={localVideoTile.tileId} className="h-full w-full" />
+            <ExpoAWSChimeView
+              tileId={localVideoTile.tileId}
+              isLocal={true}
+              className="h-full w-full"
+            />
             <Text
               size="sm"
               className="absolute bottom-2 left-2 rounded bg-black/50 px-1 py-0.5 text-typography-white"

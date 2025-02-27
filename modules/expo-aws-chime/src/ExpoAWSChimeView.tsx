@@ -5,6 +5,7 @@ import { View, ViewProps } from "react-native";
 
 export type ExpoAWSChimeViewProps = {
   tileId: number;
+  isLocal?: boolean;
 } & ViewProps;
 
 const NativeView: React.ComponentType<ExpoAWSChimeViewProps> =
@@ -12,10 +13,10 @@ const NativeView: React.ComponentType<ExpoAWSChimeViewProps> =
 
 export default class ExpoAWSChimeView extends PureComponent<ExpoAWSChimeViewProps> {
   render() {
-    const { tileId, ...rest } = this.props;
+    const { tileId, isLocal, ...rest } = this.props;
     return (
       <View {...rest}>
-        <NativeView style={{ width: "100%", height: "100%" }} tileId={tileId} />
+        <NativeView style={{ width: "100%", height: "100%" }} tileId={tileId} isLocal={isLocal} />
       </View>
     );
   }

@@ -360,6 +360,12 @@ class ExpoAWSChimeModule : Module() {
         }
       }
 
+      Prop("isLocal") { view: ExpoAWSChimeView, isLocal: Boolean ->
+        logger.info(TAG, "Setting isLocal: $isLocal")
+        view.setIsLocal(isLocal)
+        logger.info(TAG, "isLocal set to $isLocal")
+      }
+
       OnViewDestroys {
         meetingSession?.let { session ->
           val tileId = it.tileId
