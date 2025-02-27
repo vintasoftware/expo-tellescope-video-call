@@ -1,5 +1,5 @@
 {
-  "name": "health-app",
+  "name": "expo-chime-demo-app",
   "main": "expo-router/entry",
   "version": "1.0.0",
   "scripts": {

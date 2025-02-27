@@ -2,8 +2,8 @@ import { ConfigContext, ExpoConfig } from "expo/config";
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
-  name: "health-app",
-  slug: "health-app",
+  name: "expo-chime-demo-app",
+  slug: "expo-chime-demo-app",
   version: "1.0.0",
   orientation: "portrait",
   icon: "./assets/images/icon.png",

@@ -26,7 +26,7 @@ export class ChimeAPI {
         response.status,
         responseText,
       );
-      throw new Error("Failed to join meeting. Please try again.");
+      throw new Error("Failed to join meeting. The meeting may have ended. Please try again.");
     }
 
     const data = await response.json();
