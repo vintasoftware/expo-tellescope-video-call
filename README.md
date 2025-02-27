@@ -4,6 +4,8 @@
 
 A demonstration of AWS Chime SDK integration with Expo/React Native as a native module. This project showcases how to build a video conferencing application using [Expo Modules API](https://docs.expo.dev/versions/latest/sdk/modules/) and [AWS Chime](https://aws.amazon.com/chime/).
 
+<img src="https://github.com/user-attachments/assets/b96f9a6d-8113-4a60-b5a0-cfb0afa39b05" alt="Expo Chime Demo screenshot" width="200" />
+
 ## Supported Platforms
 
 - Android
