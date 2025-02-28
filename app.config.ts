@@ -2,8 +2,8 @@ import { ConfigContext, ExpoConfig } from "expo/config";
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
-  name: "expo-chime-demo-app",
-  slug: "expo-chime-demo-app",
+  name: "tellescope-chime-demo-app",
+  slug: "tellescope-chime-demo-app",
   version: "1.0.0",
   orientation: "portrait",
   icon: "./assets/images/icon.png",

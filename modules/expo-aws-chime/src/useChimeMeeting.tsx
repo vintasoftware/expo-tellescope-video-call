@@ -9,7 +9,6 @@ import {
   requestMultiple,
 } from "react-native-permissions";
 
-import { ChimeAPI } from "./ChimeAPI";
 import type {
   AttendeeInfo,
   ChimeEventMap,
@@ -19,13 +18,12 @@ import type {
 import {
   mute,
   startLocalVideo,
-  startMeeting,
+  startMeeting as nativeStartMeeting,
   stopLocalVideo,
   stopMeeting,
   unmute,
 } from "./ExpoAWSChimeModule";
 import { addListener } from "./ExpoAWSChimeModule";
-import { getChimeConfig } from "./utils/config";
 
 interface ChimeMeetingContextValue {
   isInMeeting: boolean;
@@ -37,7 +35,10 @@ interface ChimeMeetingContextValue {
   error: string | null;
   currentMeeting: MeetingInfo | null;
   currentAttendee: AttendeeInfo | null;
-  joinMeeting: (title: string) => Promise<void>;
+  checkAndRequestPermissions: () => Promise<boolean>;
+  setCurrentMeeting: (meeting: MeetingInfo | null) => void;
+  setCurrentAttendee: (attendee: AttendeeInfo | null) => void;
+  startMeeting: () => Promise<void>;
   leaveMeeting: () => Promise<void>;
   toggleMute: () => Promise<void>;
   toggleVideo: () => Promise<void>;
@@ -58,9 +59,6 @@ const CHIME_PERMISSIONS = Platform.select({
   },
   default: {},
 });
-
-// Create a singleton instance of ChimeAPI
-const chimeAPI = new ChimeAPI(getChimeConfig());
 
 export function ChimeMeetingProvider({ children }: { children: React.ReactNode }) {
   const [isInMeeting, setIsInMeeting] = useState(false);
@@ -184,38 +182,10 @@ export function ChimeMeetingProvider({ children }: { children: React.ReactNode }
     }
   }, []);
 
-  const joinMeeting = useCallback(
-    async (title: string) => {
-      try {
-        console.log("Joining meeting with title:", title);
-        setIsLoading(true);
-        setError(null);
-
-        const hasPermissions = await checkAndRequestPermissions();
-        if (!hasPermissions) {
-          throw new Error("Required permissions not granted");
-        }
-
-        const { Meeting, Attendee } = await chimeAPI.joinMeeting(title);
-        if (!Meeting || !Attendee) {
-          throw new Error("Invalid meeting data received");
-        }
-
-        setIsInMeeting(true);
-        setCurrentMeeting(Meeting);
-        setCurrentAttendee(Attendee);
-
-        await startMeeting(Meeting, Attendee);
-      } catch (err) {
-        console.error("Error in joinMeeting:", err);
-        setError(err instanceof Error ? err.message : "Failed to join meeting");
-        cleanup();
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    [cleanup, checkAndRequestPermissions],
-  );
+  const startMeeting = useCallback(async () => {
+    if (!currentMeeting || !currentAttendee) return;
+    await nativeStartMeeting(currentMeeting, currentAttendee);
+  }, [currentMeeting, currentAttendee]);
 
   const leaveMeeting = useCallback(async () => {
     try {
@@ -278,7 +248,10 @@ export function ChimeMeetingProvider({ children }: { children: React.ReactNode }
     error,
     currentMeeting,
     currentAttendee,
-    joinMeeting,
+    checkAndRequestPermissions,
+    setCurrentMeeting,
+    setCurrentAttendee,
+    startMeeting,
     leaveMeeting,
     toggleMute,
     toggleVideo,

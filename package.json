@@ -1,5 +1,5 @@
 {
-  "name": "expo-chime-demo-app",
+  "name": "tellescope-chime-demo-app",
   "main": "expo-router/entry",
   "version": "1.0.0",
   "scripts": {
@@ -71,6 +71,13 @@
     "@gluestack-ui/toast": "^1.0.8",
     "@gluestack-ui/tooltip": "^0.1.38",
     "@legendapp/motion": "^2.4.0",
+    "@react-native-async-storage/async-storage": "^1.23.1",
+    "@tellescope/chat": "^1.174.0",
+    "@tellescope/react-components": "^1.174.0",
+    "@tellescope/sdk": "^1.174.0",
+    "@tellescope/types-client": "^1.174.0",
+    "@tellescope/types-utilities": "^1.174.0",
+    "@tellescope/utilities": "^1.174.0",
     "babel-plugin-module-resolver": "^5.0.2",
     "expo": "~52.0.30",
     "expo-constants": "~17.0.5",

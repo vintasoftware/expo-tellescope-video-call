@@ -1,5 +1,7 @@
+import { useSession } from "@tellescope/react-components";
+import type { MeetingInfo as TellescopeMeetingInfo } from "@tellescope/types-models";
 import { useRouter } from "expo-router";
-import React, { useCallback, useMemo } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { View } from "react-native";
 
 import { Button, ButtonText } from "@/components/ui/button";
@@ -7,41 +9,101 @@ import { HStack } from "@/components/ui/hstack";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import { ExpoAWSChimeView, useChimeMeeting } from "@/modules/expo-aws-chime";
+import type { MeetingInfo } from "@/modules/expo-aws-chime/src/ExpoAWSChime.types";
 
-interface MeetingScreenProps {
-  meetingTitle: string;
+interface TellescopeMediaPlacement {
+  AudioFallbackUrl: string;
+  AudioHostUrl: string;
+  SignalingUrl: string;
+  TurnControlUrl: string;
 }
 
-export function MeetingScreen({ meetingTitle }: MeetingScreenProps) {
+function adaptMeetingInfo(tellescopeMeeting: TellescopeMeetingInfo): MeetingInfo {
+  const mediaPlacement = tellescopeMeeting.MediaPlacement as TellescopeMediaPlacement;
+  return {
+    ...tellescopeMeeting,
+    MediaRegion: "us-east-1", // Default to us-east-1 since Tellescope doesn't provide this
+    MediaPlacement: mediaPlacement,
+  };
+}
+
+const ENDUSER_ID = process.env.EXPO_PUBLIC_TELLESCOPE_ENDUSER_ID as string;
+
+export function MeetingScreen() {
   const {
     isInMeeting,
     isMuted,
     isVideoEnabled,
     attendees,
     videoTiles,
-    error,
-    joinMeeting,
-    leaveMeeting,
+    error: chimeError,
+    startMeeting,
+    setCurrentMeeting,
+    setCurrentAttendee,
+    leaveMeeting: leaveChimeMeeting,
     toggleMute,
     toggleVideo,
   } = useChimeMeeting();
+  const [id, setId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+  const session = useSession();
 
-  const handleLeaveMeeting = useCallback(() => {
-    leaveMeeting();
-    router.dismissTo("/");
-  }, [leaveMeeting, router]);
+  const handleLeaveMeeting = useCallback(async () => {
+    try {
+      if (id) {
+        await session.api.meetings.end_meeting({ id });
+      }
+      await leaveChimeMeeting();
+      router.dismissTo("/");
+    } catch (err) {
+      console.error("Error leaving meeting:", err);
+      setError("Error leaving meeting");
+    }
+  }, [leaveChimeMeeting, router, session.api.meetings, id]);
 
-  React.useEffect(() => {
-    if (!isInMeeting) {
-      joinMeeting(meetingTitle);
+  // Start a new meeting with Tellescope SDK on render
+  useEffect(() => {
+    // Create a new calendar event on Tellescope
+    session.api.calendar_events
+      .createOne({
+        title: "Video Call with Mobile App",
+        startTimeInMS: Date.now(),
+        durationInMinutes: 30,
+        enableVideoCall: true,
+        attendees: [{ type: "enduser", id: ENDUSER_ID }],
+      })
+      .then(({ id }) => {
+        // Start a new video call on Tellescope
+        session.api.meetings
+          .start_meeting_for_event({ calendarEventId: id })
+          .then(({ id, meeting, host }) => {
+            // Store the meeting info
+            setId(id);
+            setCurrentMeeting(adaptMeetingInfo(meeting.Meeting));
+            setCurrentAttendee(host.info);
+          });
+      });
+  }, [session.api.calendar_events, session.api.meetings, setCurrentMeeting, setCurrentAttendee]);
+
+  // When meeting info is set, join the meeting with expo-aws-chime native module
+  useEffect(() => {
+    if (!isInMeeting && id) {
+      startMeeting();
     }
     return () => {
       if (isInMeeting) {
         handleLeaveMeeting();
       }
     };
-  }, [isInMeeting, joinMeeting, handleLeaveMeeting, meetingTitle]);
+  }, [isInMeeting, id, startMeeting, handleLeaveMeeting]);
+
+  // Track Chime error
+  useEffect(() => {
+    if (chimeError) {
+      setError(chimeError);
+    }
+  }, [chimeError]);
 
   // Separate local and remote video tiles
   const { localVideoTile, remoteVideoTiles } = useMemo(() => {
@@ -88,8 +150,8 @@ export function MeetingScreen({ meetingTitle }: MeetingScreenProps) {
     return (
       <VStack space="md" className="items-center">
         <Text className="text-error-500">{error}</Text>
-        <Button onPress={() => joinMeeting(meetingTitle)}>
-          <ButtonText>Retry</ButtonText>
+        <Button onPress={() => router.replace("/")}>
+          <ButtonText>Go Back</ButtonText>
         </Button>
       </VStack>
     );
@@ -113,7 +175,7 @@ export function MeetingScreen({ meetingTitle }: MeetingScreenProps) {
                   key={`row-${rowIndex}`}
                   className={`my-1 flex-1 flex-row ${getRowHeightClass(gridLayout.length)}`}
                 >
-                  {tilesInRow.map((tile, tileIndex) => (
+                  {tilesInRow.map((tile) => (
                     <View key={tile.tileId} className="mx-1 flex-1 overflow-hidden rounded-lg">
                       <ExpoAWSChimeView
                         tileId={tile.tileId}
@@ -177,7 +239,7 @@ export function MeetingScreen({ meetingTitle }: MeetingScreenProps) {
         >
           <ButtonText>{isVideoEnabled ? "Stop Video" : "Start Video"}</ButtonText>
         </Button>
-        <Button variant="solid" onPress={leaveMeeting} className="rounded-full bg-error-500">
+        <Button variant="solid" onPress={handleLeaveMeeting} className="rounded-full bg-error-500">
           <ButtonText>Leave</ButtonText>
         </Button>
       </HStack>

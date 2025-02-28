@@ -1,10 +1,12 @@
-# Expo AWS Chime Demo (Alpha)
+# Expo Tellescope Video Calls Demo (Alpha)
 
 ⚠️ **Under heavy development**
 
-A demonstration of AWS Chime SDK integration with Expo/React Native as a native module. This project showcases how to build a video conferencing application using [Expo Modules API](https://docs.expo.dev/versions/latest/sdk/modules/) and [AWS Chime](https://aws.amazon.com/chime/).
-
 <img src="https://github.com/user-attachments/assets/b96f9a6d-8113-4a60-b5a0-cfb0afa39b05" alt="Expo Chime Demo screenshot" width="200" />
+
+Telehealth video calls in Expo/React Native using [Tellescope](https://tellescope.com/).
+
+This project is a demonstration of how to implement a mobile app for telehealth video calls using [Tellescope](https://tellescope.com/), which are powered by [AWS Chime](https://aws.amazon.com/chime/). Instead of using the outdated [amazon-chime-react-native-demo](https://github.com/aws-samples/amazon-chime-react-native-demo/), this projects integrates with the AWS Chime SDK using the new [Expo Modules API](https://docs.expo.dev/versions/latest/sdk/modules/).
 
 ## Supported Platforms
 
@@ -21,7 +23,7 @@ A demonstration of AWS Chime SDK integration with Expo/React Native as a native 
 
 ## Technical Details
 - Custom Expo native module (`expo-aws-chime`)
-- React Context API for state management
+- Integrated with Tellescope SDK in a headless manner
 - Tailwind CSS for styling with NativeWind
 - gluestack-ui v2 components for UI elements
 
@@ -44,17 +46,21 @@ cd expo-chime-demo
 npm install
 ```
 
-3. Deploy [the serverless demo of AWS Chime](https://github.com/aws/amazon-chime-sdk-js/tree/main/demos/serverless) and get the API URL. It looks like: `https://<hash>.execute-api.<region>.amazonaws.com/Prod/`
+3. Create an Patient (End User) in Tellescope staging env: https://staging.tellescope.com/endusers. This is the user that you'll start the video call with from the mobile app.
 
 4. Configure the environment variables:
     1. Create the .env.local file in the root directory:
     ```bash
     cp .env.local.example .env.local
     ```
-    2. Add your AWS configuration:
+    2. Adapt to your values:
     ```
-    EXPO_PUBLIC_AWS_REGION=<region>
-    EXPO_PUBLIC_AWS_CHIME_ENDPOINT=https://<hash>.execute-api.<region>.amazonaws.com/Prod/
+    EXPO_PUBLIC_CHIME_API_URL=<check-readme>
+    EXPO_PUBLIC_CHIME_API_REGION=<check-readme>
+    EXPO_PUBLIC_TELLESCOPE_API_BASE_URL=https://staging-api.tellescope.com
+    EXPO_PUBLIC_TELLESCOPE_USER_EMAIL=<your-tellescope-email>
+    EXPO_PUBLIC_TELLESCOPE_USER_PASSWORD=<your-tellescope-password>
+    EXPO_PUBLIC_TELLESCOPE_ENDUSER_ID=<check-readme>
     ```
 
 ### Running the App
@@ -70,7 +76,19 @@ Currently only Android is supported. AWS Chime SDK doesn't support x86 emulators
 npx expo run:android
 ```
 
-3. Check your physical device.
+3. Check your physical mobile device
+
+4. Log in in Tellescope
+
+5. Start a video call, it will create a Calendar Event and start a video call on Tellescope with the user specified as EXPO_PUBLIC_TELLESCOPE_ENDUSER_ID.
+
+6. In your PC, open the Patient page for the end user you've just created on the Installation step. The URL will be like: https://staging.tellescope.com/endusers/<enduser-id>
+
+7. Impersonate the Patient by clicking this icon:
+
+![Image](https://github.com/user-attachments/assets/03b0f542-f2b3-4a60-b0d5-e5308f10b79e)
+
+8. Look for the video call and join it.
 
 ## Project Structure
 

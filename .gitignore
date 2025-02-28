@@ -50,8 +50,3 @@ _dev/
 # Pre-build files
 /android/
 /ios/
-
-# Amazon Chime supporting projects (useful for development and AI only)
-/amazon-chime-react-native-demo/
-/amazon-chime-sdk-android/
-/amazon-chime-sdk-ios/
