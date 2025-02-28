@@ -68,7 +68,8 @@ export function MeetingScreen() {
     session.api.calendar_events
       .createOne({
         title: "Video Call with Mobile App",
-        startTimeInMS: Date.now(),
+        // 15 minutes from now:
+        startTimeInMS: Date.now() + 15 * 60 * 1000,
         durationInMinutes: 30,
         enableVideoCall: true,
         attendees: [{ type: "enduser", id: ENDUSER_ID }],

@@ -88,7 +88,7 @@ npx expo run:android
 
 ![Image](https://github.com/user-attachments/assets/03b0f542-f2b3-4a60-b0d5-e5308f10b79e)
 
-8. Look for the video call and join it.
+8. Look for the video call at My Events and join it.
 
 ## Project Structure
 
