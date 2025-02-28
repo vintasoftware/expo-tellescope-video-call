@@ -80,7 +80,7 @@ npx expo run:android
 
 4. Log in in Tellescope
 
-5. Start a video call, it will create a Calendar Event and start a video call on Tellescope with the user specified as EXPO_PUBLIC_TELLESCOPE_ENDUSER_ID.
+5. Start a video call, it will create a Calendar Event and start a video call on Tellescope with the user specified as `EXPO_PUBLIC_TELLESCOPE_ENDUSER_ID`.
 
 6. In your PC, open the Patient page for the end user you've just created on the Installation step. The URL will be like: https://staging.tellescope.com/endusers/<enduser-id>
 
