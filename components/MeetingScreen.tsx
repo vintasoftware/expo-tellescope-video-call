@@ -149,7 +149,7 @@ export function MeetingScreen() {
 
   if (error) {
     return (
-      <VStack space="md" className="items-center">
+      <VStack space="md" className="items-center bg-background-0">
         <Text className="text-error-500">{error}</Text>
         <Button onPress={() => router.replace("/")}>
           <ButtonText>Go Back</ButtonText>
@@ -159,7 +159,7 @@ export function MeetingScreen() {
   }
 
   return (
-    <VStack className="flex-1">
+    <VStack className="flex-1 bg-background-0">
       {/* Main video grid for remote participants */}
       <View className="relative flex-1">
         {remoteVideoTiles.length > 0 ? (

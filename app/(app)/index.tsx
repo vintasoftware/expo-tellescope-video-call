@@ -1,7 +1,7 @@
 import { useRouter } from "expo-router";
 import React, { useCallback } from "react";
 
-import { Button } from "@/components/ui/button";
+import { Button, ButtonText } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 
@@ -16,14 +16,14 @@ export default function HomeScreen() {
 
   if (!ENDUSER_ID) {
     return (
-      <VStack space="xl" className="flex-1 p-4">
+      <VStack space="xl" className="flex-1 bg-background-0 p-4">
         <Text>Please set the EXPO_PUBLIC_TELLESCOPE_ENDUSER_ID environment variable</Text>
       </VStack>
     );
   }
 
   return (
-    <VStack space="xl" className="flex-1 p-4">
+    <VStack space="xl" className="flex-1 bg-background-0 p-4">
       <VStack space="md">
         <Text size="2xl" bold>
           Video Calls
@@ -35,7 +35,7 @@ export default function HomeScreen() {
 
       <VStack space="md" className="flex-1">
         <Button size="lg" variant="solid" className="bg-primary-500" onPress={handleStartMeeting}>
-          <Text className="text-typography-white">Start Video Call</Text>
+          <ButtonText>Start Video Call</ButtonText>
         </Button>
       </VStack>
     </VStack>

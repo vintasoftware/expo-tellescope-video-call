@@ -50,7 +50,7 @@ export default function LoginScreen() {
   };
 
   return (
-    <View className="flex-1 items-center justify-center p-4">
+    <View className="flex-1 items-center justify-center bg-background-0 p-4">
       <VStack space="lg" className="w-full max-w-md">
         <Text size="2xl" className="text-center font-bold">
           Tellescope + AWS Chime Demo
